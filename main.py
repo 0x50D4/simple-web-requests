@@ -1,30 +1,27 @@
 import socket
 from sys import argv
+import argparse
 
-print(f"Usage: {argv[0]} [domain] [subdomain] [GET/POST] [data]\n")
+parser = argparse.ArgumentParser(description="A program for simple web requests")
+parser.add_argument("domain",help="The domain name to send the request to")
+parser.add_argument("request_type", help="GET or POST request")
+parser.add_argument("-s", "--subdomain", help="if there is a subdomain you want")
+parser.add_argument("-p", "--post_content", help="what kind of content you want in the post request.")
+parser.add_argument("-g", "--get_content", help="What kind of get content you want")
 
-if (len(argv) > 1):
-    domain = argv[1]
-else:
-    domain = input("Enter a domain: ")
+args = parser.parse_args()
 
-if (len(argv) > 2):
-    subdomain = argv[2]
-else:
-    # subdomain = input("Enter a subdomain: ")
-    subdomain = ""
+domain = args.domain 
+req_type = args.request_type
 
-if (len(argv) > 3):
-    req_type = argv[3]
-else:
-    req_type = input("You need to enter a request type: ") 
+if args.subdomain:
+    subdomain = args.subdomain
 
-if (len(argv) > 4):
-    content = argv[4]
-    length = len(content)
-else:
-    content = ""
-    length = 0
+if args.post_content:
+    post_content = args.post_content
+
+if args.get_content:
+    get_content = args.get_content
 
 socket.timeout(10)
 arg_list = []
@@ -51,18 +48,31 @@ def send_and_recv_data(request, client):
     return http_response
 
 
-def work_on_data(content):
+def work_on_get(content):
+    if content:
+        content = "?" + content
+    else:
+        content = ""
+
+    return content
+
+
+def work_on_post(content):
     """Responsible for handling two cases: there is data/there is no data"""
 
-    length = len(content)
-
-    if length == 0:
-        length = ""
-        content_type = ""
+    if content:
+        length = "Content-Length: " + str(len(content))
+        content_type = "Content-Type: " + "application/x-www-form-urlencoded"
     else:
-        length = "Content-Length: " + str(length) 
-        content_type = "Content-Type: " + "application/x-www-form-urlencoded" 
-    return length, content_type
+        length = "" 
+        content_type = ""
+
+    if content:
+        content = "\r\n" + content
+    else:
+        content = ""
+
+    return length, content_type, content
 
 def work_on_domain(domain):
     """Function to remove http,https and / at end"""
@@ -92,14 +102,14 @@ def add_all_list(*arg):
     return "".join(arg_list)
 
 
-def prep_request(domain, subdomain, req_type, stuff):
+def prep_request(domain, subdomain, req_type, stuff, get_content):
     """Set the request up, with paramteres"""
 
-    request = f"{req_type} /{subdomain} HTTP/1.1\r\n{domain}Connection: close\r\n{stuff}"
+    request = f"{req_type} /{subdomain}{get_content} HTTP/1.1\r\n{domain}Connection: close\r\n{stuff}"
 
     return request
               
-def post_request(domain, subdomain, req_type, content=""):
+def post_request(domain, subdomain, req_type, get_content, post_content):
     domain = work_on_domain(domain)
 
     # connect the client
@@ -108,15 +118,15 @@ def post_request(domain, subdomain, req_type, content=""):
     domain = "Host: " + domain + "\r\n" 
     ua = "User-Agent: " + "soda/123" + "\r\n"
     
-    # Check if there is data, if there is not, do not use content type and such
-    length, content_type = work_on_data(content)
-    content = "\r\n" + content
-    stuff = add_all_list(length, content_type, ua, content)     
+    length, content_type, post_content = work_on_post(post_content)
+    get_content = work_on_get(get_content)
+
+    stuff = add_all_list(length, content_type, ua, post_content)     
     
     # prepare and send data
-    request = prep_request(domain, subdomain, req_type, stuff) 
+    request = prep_request(domain, subdomain, req_type, stuff, get_content) 
     response = send_and_recv_data(request, client)
     return response
 
-response = post_request(domain, subdomain, req_type, content)
+response = post_request(args.domain, args.subdomain, args.request_type, args.get_content, args.post_content)
 print(f"[+] Got response: \n{response}")
