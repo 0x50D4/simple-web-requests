@@ -68,7 +68,7 @@ def work_on_post(content):
         content_type = ""
 
     if content:
-        content = "\r\n" + content
+        content = "" + content
     else:
         content = ""
 
