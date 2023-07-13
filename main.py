@@ -1,6 +1,7 @@
 import socket
-from sys import argv
 import argparse
+from urllib import parse
+
 
 parser = argparse.ArgumentParser(description="A program for simple web requests")
 parser.add_argument("domain",help="The domain name to send the request to")
@@ -47,10 +48,16 @@ def send_and_recv_data(request, client):
     http_response = response.decode("ISO-8859-1") 
     return http_response
 
+def encode_values(content):
+    content_list = content.split()
+    for i in range(len(content_list)):
+        content_list[i] = content_list[i].split("|")[0] + "=" + parse.quote(content_list[i].split("|")[1])
+    return "&".join(content_list)
+
 
 def work_on_get(content):
     if content:
-        content = "?" + content
+        content = "?" + encode_values(content) 
     else:
         content = ""
 
@@ -63,15 +70,12 @@ def work_on_post(content):
     if content:
         length = "Content-Length: " + str(len(content))
         content_type = "Content-Type: " + "application/x-www-form-urlencoded"
+        content = encode_values(content)
     else:
         length = "" 
         content_type = ""
-
-    if content:
-        content = "" + content
-    else:
         content = ""
-
+    
     return length, content_type, content
 
 def work_on_domain(domain):
