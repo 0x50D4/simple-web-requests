@@ -27,6 +27,8 @@ else:
     length = 0
 
 socket.timeout(10)
+arg_list = []
+
 
 def send_and_recv_data(request, client):
     """Using the client send and recv data"""
@@ -34,7 +36,7 @@ def send_and_recv_data(request, client):
     client.sendall(request.encode())
     print(f"[+] Sent: \n{request}\n")
 
-    # recieve data
+    # recieve data, we use this method because it gets everything for sure
     response = b""
     try: 
         while True:
@@ -58,8 +60,8 @@ def work_on_data(content):
         length = ""
         content_type = ""
     else:
-        length = "Content-Length: " + str(length) + "\r\n"
-        content_type = "Content-Type: " + "application/x-www-form-urlencoded" + "\r\n"
+        length = "Content-Length: " + str(length) 
+        content_type = "Content-Type: " + "application/x-www-form-urlencoded" 
     return length, content_type
 
 def work_on_domain(domain):
@@ -71,7 +73,7 @@ def work_on_domain(domain):
         domain = domain[7:]
     if (domain[-1] == "/"):
         domain = domain[:-1]
-    return domain
+    return domain 
 
 def initialize_client(domain):
     """Use sockets to initialize a connection to the webserver"""
@@ -81,26 +83,38 @@ def initialize_client(domain):
     client.connect((domain, port))
     return client
 
+def add_all_list(*arg):
+    for x in arg:
+        if (str(x) != ""):
+            arg_list.append(str(x) + "\r\n")
+        else:
+            arg_list.append(str(x))
+    return "".join(arg_list)
 
-def prep_request(domain, subdomain, req_type, length, content_type, content, ua):
+
+def prep_request(domain, subdomain, req_type, stuff):
     """Set the request up, with paramteres"""
 
-    request = f"{req_type} /{subdomain} HTTP/1.1\r\nHost: {domain}\r\nConnection: close\r\n{ua}{length}{content_type}\r\n{content}"
+    request = f"{req_type} /{subdomain} HTTP/1.1\r\n{domain}Connection: close\r\n{stuff}"
 
     return request
               
 def post_request(domain, subdomain, req_type, content=""):
     domain = work_on_domain(domain)
-    
+
     # connect the client
     client = initialize_client(domain) 
 
+    domain = "Host: " + domain + "\r\n" 
+    ua = "User-Agent: " + "soda/123" + "\r\n"
+    
     # Check if there is data, if there is not, do not use content type and such
     length, content_type = work_on_data(content)
-
-    ua = "User-Agent: " + "soda/123" + "\r\n"
+    content = "\r\n" + content
+    stuff = add_all_list(length, content_type, ua, content)     
+    
     # prepare and send data
-    request = prep_request(domain, subdomain, req_type, length, content_type, content, ua) 
+    request = prep_request(domain, subdomain, req_type, stuff) 
     response = send_and_recv_data(request, client)
     return response
 
