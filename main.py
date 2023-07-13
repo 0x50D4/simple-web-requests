@@ -51,7 +51,7 @@ def send_and_recv_data(request, client):
 def encode_values(content):
     content_list = content.split()
     for i in range(len(content_list)):
-        content_list[i] = content_list[i].split("|")[0] + "=" + parse.quote(content_list[i].split("|")[1])
+        content_list[i] = parse.quote(content_list[i].split("|")[0]) + "=" + parse.quote(content_list[i].split("|")[1])
     return "&".join(content_list)
 
 
