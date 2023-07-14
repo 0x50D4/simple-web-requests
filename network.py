@@ -5,6 +5,7 @@ def initialize_client(domain, port):
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((domain, port))
+    client.settimeout(5)
     return client
 
 def send_and_recv_data(request, client):

@@ -41,7 +41,7 @@ def text_callback(sender):
     usr_input = dpg.get_value(sender) # returning the value of the text box into usr_input
 
 def do_network(domain, usr_input):
-   dpg.configure_item("output", default_value=network.main(domain, usr_input)) 
+    dpg.configure_item("output", default_value=network.main(domain, usr_input)) 
 
 def btn_callback():
     """callback called upon hitting send"""
@@ -66,6 +66,9 @@ def decode_popup():
 def length_popup():
     dpg.show_item("length-popup")
 
+def url_popup():
+    dpg.show_item("url-popup")
+
 def encode_data(sender, value, userdata):
     input = userdata[0]
     output = userdata[1]
@@ -80,6 +83,16 @@ def length_data(sender, value, userdata):
     input = userdata[0]
     output = userdata[1]
     dpg.set_value(output, tools.length(dpg.get_value(input)))
+
+def url_data_thread(input, output):
+    time.sleep(0.5)
+    dpg.set_value(output, "")
+
+def url_data(sender, value, userdata):
+    
+    input = userdata[0] 
+    output = userdata[1]
+    dpg.set_value(output, tools.parse_url(dpg.get_value(input)))
 
 def set_up_gui():
     dpg.create_context()
@@ -101,6 +114,7 @@ def set_up_gui():
             dpg.add_menu_item(label="Encode", callback=encode_popup)
             dpg.add_menu_item(label="Decode", callback=decode_popup)
             dpg.add_menu_item(label="Length", callback=length_popup)
+            dpg.add_menu_item(label="Url Clear", callback=url_popup)
    
 
     # encoding window
@@ -115,11 +129,19 @@ def set_up_gui():
         output = dpg.add_input_text(readonly=True)
         dpg.add_button(label="Decode", callback=decode_data, user_data=[u_input, output])
 
-    # decoding window
+    # length window
     with dpg.window(label="Length", width=dv.ww, height=dv.wh, tag="length-popup", show=False):
-        u_input = dpg.add_input_text(hint="Enter some text")
-        output = dpg.add_input_text(readonly=True)
+        u_input = dpg.add_input_text(hint="Enter some text", multiline=True)
+        output = dpg.add_input_text(readonly=True, multiline=True)
         dpg.add_button(label="Length", callback=length_data, user_data=[u_input, output])
+
+    with dpg.window(label="URL", width=dv.ww, height=dv.wh, tag="url-popup", show=False):
+        u_input = dpg.add_input_text(hint="Enter some text", )
+        output = dpg.add_input_text(readonly=True)
+        dpg.add_button(label="Fix", callback=url_data, user_data=[u_input, output])
+
+        
+
 
     dpg.show_viewport()
     dpg.start_dearpygui()
