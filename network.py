@@ -14,8 +14,7 @@ def send_and_recv_data(request, client):
         client.sendall(request.encode())
     except:
         print("[-] Fatal error while sending data...")
-        exit(1)
-    
+        return("Fatal error while sending data.") 
     response = b""
 
     try:
@@ -26,12 +25,14 @@ def send_and_recv_data(request, client):
             response = response + chunk
     except socket.timeout as e:
         print(e)
+        return e
 
-    return response.decode("ISO-8859-1")
+    return response.decode("ISO-8859-1") # this seems to work out most
 
 def main(domain, request):
-    
-    client = initialize_client(domain, 80)
+   
+    # TODO: add a function for https (pain)
+    client = initialize_client(domain, 80) 
     response = send_and_recv_data(request, client)
 
     return response
