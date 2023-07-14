@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 import re
 import network 
+import tools
 
 new_data = 1 # variable for tracking if we have new data
 domain = ""
@@ -44,19 +45,53 @@ def btn_callback():
     print(usr_input) # print user input(the request) formatted
     dpg.configure_item("output", default_value=network.main(domain, usr_input)) # call the main netowrk function for the output textbox
 
+def encode_popup():
+    dpg.show_item("encode-popup")
+
+def decode_popup():
+    dpg.show_item("decode-popup") 
+
+def encode_data(sender, value, userdata):
+    input = userdata[0]
+    output = userdata[1]
+    dpg.set_value(output, tools.encode(dpg.get_value(input)))
+
+def decode_data(sender, value, userdata):
+    input = userdata[0]
+    output = userdata[1]
+    dpg.set_value(output, tools.decode(dpg.get_value(input)))
+
+
 def set_up_gui():
     dpg.create_context()
-    dpg.create_viewport(title="Web requester", width=600, height=900, resizable=False)
+    dpg.create_viewport(title="Web requester", width=600, height=900, resizable=True)
     dpg.setup_dearpygui()
     
+    # the main window
     with dpg.window(tag="Primary Window", width=600, height=900,  no_move=True, no_close=True, no_title_bar=True ):
-        dpg.add_text("Web request sender")
+        dpg.add_spacer(height=10)
         dpg.add_input_text(multiline=True, default_value=default, callback=text_callback, width=600, height= 400, tab_input=True)
         dpg.add_button(label="Send", callback=btn_callback)
         dpg.add_input_text(multiline=True, readonly=True, width = 600, height=400, tag="output")
         
     dpg.set_primary_window("Primary Window", True)
+
+    # menu bar
+    with dpg.viewport_menu_bar():
+        with dpg.menu(label="Tools"):
+            dpg.add_menu_item(label="Encode", callback=encode_popup)
+            dpg.add_menu_item(label="Decode", callback=decode_popup)
     
+    with dpg.window(label="Encode", width=200, height=60, tag="encode-popup", show=False):
+        u_input = dpg.add_input_text(hint="Enter some encodable text") 
+        output = dpg.add_input_text(readonly=True)
+        dpg.add_button(label="Encode", callback=encode_data, user_data=[u_input, output])
+
+    with dpg.window(label="Decode", width=200, height=60, tag="decode-popup", show=False):
+        u_input = dpg.add_input_text(hint="Enter some decodable text")
+        output = dpg.add_input_text(readonly=True)
+        dpg.add_button(label="Decode", callback=decode_data, user_data=[u_input, output])
+
     dpg.show_viewport()
     dpg.start_dearpygui()
     dpg.destroy_context()
