@@ -9,6 +9,7 @@ parser.add_argument("request_type", help="GET or POST request")
 parser.add_argument("-s", "--subdomain", help="if there is a subdomain you want")
 parser.add_argument("-p", "--post_content", help="what kind of content you want in the post request.")
 parser.add_argument("-g", "--get_content", help="What kind of get content you want")
+parser.add_argument("-a", "--additional", help="Additional tags you might want to add(for now it only supports one coz I'm lazy)")
 
 args = parser.parse_args()
 
@@ -96,7 +97,7 @@ def work_on_post(content):
     if content:
         length = "Content-Length: " + str(len(content))
         content_type = "Content-Type: " + "application/x-www-form-urlencoded"
-        content = encode_values(content)
+        content = "\r\n" + encode_values(content)
     else:
         length = "" 
         content_type = ""
@@ -125,7 +126,7 @@ def initialize_client(domain):
 
 def add_all_list(*arg):
     for x in arg:
-        if (str(x) != ""):
+        if (str(x) != "" and str(x) != "None"):
             arg_list.append(str(x) + "\r\n")
         else:
             arg_list.append(str(x))
@@ -139,24 +140,24 @@ def prep_request(domain, subdomain, req_type, stuff, get_content):
 
     return request
               
-def post_request(domain, subdomain, req_type, get_content, post_content):
+def post_request(domain, subdomain, req_type, get_content, post_content, additional):
     domain = work_on_domain(domain)
 
     # connect the client
     client = initialize_client(domain) 
 
     domain = "Host: " + domain + "\r\n" 
-    ua = "User-Agent: " + "soda/123" + "\r\n"
+    ua = "User-Agent: " + "soda/123"
     
     length, content_type, post_content = work_on_post(post_content)
     get_content = work_on_get(get_content)
 
-    stuff = add_all_list(length, content_type, ua, post_content)     
+    stuff = add_all_list(length, content_type, ua, additional, post_content)     
     
     # prepare and send data
     request = prep_request(domain, subdomain, req_type, stuff, get_content) 
     response = send_and_recv_data(request, client)
     return response
 
-response = post_request(args.domain, args.subdomain, args.request_type, args.get_content, args.post_content)
+response = post_request(args.domain, args.subdomain, args.request_type, args.get_content, args.post_content, args.additional)
 print(f"[+] Got response: \n{response}")
