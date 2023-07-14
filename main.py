@@ -48,11 +48,38 @@ def send_and_recv_data(request, client):
     http_response = response.decode("ISO-8859-1") 
     return http_response
 
+def content_list_unparse(content):
+    indexes = []
+    if (content.find("^%") != -1):
+        while True:
+            pos = content.find("^%")
+            if pos == -1:
+                break
+            else:
+                content = list(content)
+                content[pos + 1] = "^"
+                content = "".join(content)
+                indexes.append(pos)
+        
+        content = "".join(content)
+    
+    content = parse.unquote(content)
+     
+    if (indexes != []):
+        for p in indexes:
+            content = list(content)
+            content[p+1] = "%"
+            content[p] = ""
+            content = "".join(content)
+    return content 
+
+
 def encode_values(content):
-    content_list = content.split()
+    content_list = content.split(";")
     for i in range(len(content_list)):
+        content_list[i] = content_list_unparse(content_list[i])
         content_list[i] = parse.quote(content_list[i].split("|")[0]) + "=" + parse.quote(content_list[i].split("|")[1])
-    return "&".join(content_list)
+        return "&".join(content_list)
 
 
 def work_on_get(content):
@@ -60,7 +87,6 @@ def work_on_get(content):
         content = "?" + encode_values(content) 
     else:
         content = ""
-
     return content
 
 
